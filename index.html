@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signal Dashboard</title>
+  <style>
+    :root {
+      --bg-main: #141210;
+      --bg-card: #1d1a17;
+      --bg-input: #25211d;
+      --bg-hover: #2d2823;
+      --border: #322c26;
+      --text-main: #f3efe9;
+      --text-muted: #9e958b;
+      --accent: #e07a4f;
+      --accent-hover: #d1693d;
+      --green: #2ecc71;
+      --green-bg: rgba(46, 204, 113, 0.14);
+      --red: #e74c3c;
+      --red-bg: rgba(231, 76, 60, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #261d17 0%, var(--bg-main) 55%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 28px 20px;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-star {
+      color: var(--accent);
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .status-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    @media (max-width: 820px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .pair-selector-wrap {
+      position: relative;
+      margin-bottom: 22px;
+    }
+
+    .pair-trigger {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 15px;
+      color: var(--text-main);
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .pair-trigger:hover {
+      border-color: #483f36;
+    }
+
+    .pair-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #2f2923;
+      color: #c8be8a;
+      letter-spacing: 0.5px;
+    }
+
+    .dropdown-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: #201c18;
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 14px;
+      z-index: 50;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    }
+
+    .dropdown-panel.open {
+      display: block;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .market-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .tab-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-hover);
+      color: var(--text-main);
+      border-color: #52483e;
+    }
+
+    .market-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .cat-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .cat-pill {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .cat-pill.active {
+      background: var(--text-main);
+      color: var(--bg-main);
+      font-weight: 600;
+      border-color: var(--text-main);
+    }
+
+    .pair-list {
+      max-height: 210px;
+      overflow-y: auto;
+    }
+
+    .pair-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .pair-item:hover {
+      background: var(--bg-hover);
+      color: var(--accent);
+    }
+
+    .duration-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .dur-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 11px 6px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .dur-btn.active {
+      background: var(--text-main);
+      color: var(--bg-main);
+      border-color: var(--text-main);
+    }
+
+    .get-signal-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #16120f;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .get-signal-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .signal-box {
+      margin-top: 20px;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      text-align: center;
+      display: none;
+    }
+
+    .signal-box.up {
+      display: block;
+      background: var(--green-bg);
+      border-color: rgba(46, 204, 113, 0.35);
+    }
+
+    .signal-box.down {
+      display: block;
+      background: var(--red-bg);
+      border-color: rgba(231, 76, 60, 0.35);
+    }
+
+    .signal-pair {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .signal-dir {
+      font-size: 32px;
+      font-weight: 800;
+      margin: 6px 0 14px;
+    }
+
+    .signal-box.up .signal-dir {
+      color: var(--green);
+    }
+
+    .signal-box.down .signal-dir {
+      color: var(--red);
+    }
+
+    .signal-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 12px;
+    }
+
+    .signal-meta span {
+      display: block;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .clear-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .clear-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      text-align: center;
+      padding-bottom: 14px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-num {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .stat-num.up-c { color: var(--green); }
+    .stat-num.down-c { color: var(--red); }
+
+    .stat-lbl {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .history-list {
+      max-height: 330px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+    }
+
+    .history-sub {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .dir-tag.up { color: var(--green); font-weight: 700; }
+    .dir-tag.down { color: var(--red); font-weight: 700; }
+
+    .footer-note {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 28px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <span class="brand-star">✳</span>
+        <span>Signal Dashboard</span>
+      </div>
+      <div class="status-pill">Direct Access • Persistent History</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <span class="section-label">Trading Pair</span>
+        <div class="pair-selector-wrap">
+          <div class="pair-trigger" id="pairTrigger" onclick="toggleDropdown()">
+            <span id="selectedPairText">EUR/USD</span>
+            <div class="pair-right">
+              <span class="badge" id="selectedPairBadge">LIVE FOREX</span>
+              <span>▾</span>
+            </div>
+          </div>
+
+          <div class="dropdown-panel" id="dropdownPanel">
+            <input
+              type="text"
+              class="search-input"
+              id="pairSearch"
+              placeholder="Search pairs, e.g. BTC or JPY"
+              oninput="renderPairs()"
+            />
+
+            <div class="market-tabs">
+              <button type="button" class="tab-btn active" id="tabLive" onclick="setMarket('Live market')">Live market</button>
+              <button type="button" class="tab-btn" id="tabOtc" onclick="setMarket('OTC')">OTC</button>
+            </div>
+
+            <div class="market-hint" id="marketHint">
+              Live pairs follow the real market. Forex is closed on weekends.
+            </div>
+
+            <div class="cat-pills" id="catPills">
+              <button type="button" class="cat-pill active" onclick="setCategory('All', this)">All</button>
+              <button type="button" class="cat-pill" onclick="setCategory('Forex', this)">Forex</button>
+              <button type="button" class="cat-pill" onclick="setCategory('Crypto', this)">Crypto</button>
+              <button type="button" class="cat-pill" onclick="setCategory('Exotic', this)">Exotic</button>
+              <button type="button" class="cat-pill" onclick="setCategory('Commodities', this)">Commodities</button>
+            </div>
+
+            <div class="pair-list" id="pairList"></div>
+          </div>
+        </div>
+
+        <span class="section-label">Signal Duration</span>
+        <div class="duration-grid" id="durationGrid">
+          <button type="button" class="dur-btn" onclick="setDuration('1 min', 60, this)">1 min</button>
+          <button type="button" class="dur-btn" onclick="setDuration('3 min', 180, this)">3 min</button>
+          <button type="button" class="dur-btn active" onclick="setDuration('5 min', 300, this)">5 min</button>
+          <button type="button" class="dur-btn" onclick="setDuration('15 min', 900, this)">15 min</button>
+          <button type="button" class="dur-btn" onclick="setDuration('30 min', 1800, this)">30 min</button>
+        </div>
+
+        <button type="button" class="get-signal-btn" onclick="requestSignal()">Get signal</button>
+
+        <div class="signal-box" id="signalBox">
+          <div class="signal-pair" id="resPair">EUR/USD</div>
+          <div class="signal-dir" id="resDir">▲ UP</div>
+          <div class="signal-meta">
+            <div>
+              <span>Duration</span>
+              <strong id="resDur">5 min</strong>
+            </div>
+            <div>
+              <span>Entry time</span>
+              <strong id="resTime">--:--:--</strong>
+            </div>
+            <div>
+              <span>Time left</span>
+              <strong id="resLeft">05:00</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="history-header">
+          <span class="section-label" style="margin-bottom:0;">Session History</span>
+          <button type="button" class="clear-btn" onclick="clearHistory()">Clear</button>
+        </div>
+
+        <div class="stats-row">
+          <div>
+            <div class="stat-num" id="statTotal">0</div>
+            <div class="stat-lbl">Signals</div>
+          </div>
+          <div>
+            <div class="stat-num up-c" id="statUp">0</div>
+            <div class="stat-lbl">Up</div>
+          </div>
+          <div>
+            <div class="stat-num down-c" id="statDown">0</div>
+            <div class="stat-lbl">Down</div>
+          </div>
+        </div>
+
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Python + Flask Signal Dashboard • Direct Entry Without Verification Screen
+    </div>
+  </div>
+
+  <script>
+    const ALL_PAIRS = {{ pairs | tojson }};
+    let currentMarket = "Live market";
+    let currentCategory = "All";
+    let selectedPair = { pair: "EUR/USD", badge: "LIVE FOREX" };
+    let selectedDurationLabel = "5 min";
+    let selectedDurationSeconds = 300;
+    let countdownInterval = null;
+
+    function toggleDropdown() {
+      const panel = document.getElementById("dropdownPanel");
+      panel.classList.toggle("open");
+      if (panel.classList.contains("open")) {
+        document.getElementById("pairSearch").focus();
+        renderPairs();
+      }
+    }
+
+    function setMarket(market) {
+      currentMarket = market;
+      document.getElementById("tabLive").classList.toggle("active", market === "Live market");
+      document.getElementById("tabOtc").classList.toggle("active", market === "OTC");
+      document.getElementById("marketHint").textContent =
+        market === "Live market"
+          ? "Live pairs follow the real market. Forex is closed on weekends."
+          : "OTC pairs are available for practice and simulation sessions.";
+      renderPairs();
+    }
+
+    function setCategory(cat, el) {
+      currentCategory = cat;
+      document.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("active"));
+      el.classList.add("active");
+      renderPairs();
+    }
+
+    function renderPairs() {
+      const query = document.getElementById("pairSearch").value.trim().toLowerCase();
+      const listEl = document.getElementById("pairList");
+
+      const filtered = ALL_PAIRS.filter(item => {
+        const matchMarket = item.market === currentMarket;
+        const matchCat = currentCategory === "All" || item.category === currentCategory;
+        const matchQuery = !query || item.pair.toLowerCase().includes(query) || item.category.toLowerCase().includes(query);
+        return matchMarket && matchCat && matchQuery;
+      });
+
+      if (!filtered.length) {
+        listEl.innerHTML = `<div class="pair-item" style="color:#9e958b;cursor:default;">No matching pair found</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => `
+        <div class="pair-item" onclick="selectPair('${item.pair}', '${item.badge}')">
+          <span>${item.pair}</span>
+          <span class="badge">${item.badge}</span>
+        </div>
+      `).join("");
+    }
+
+    function selectPair(pair, badge) {
+      selectedPair = { pair, badge };
+      document.getElementById("selectedPairText").textContent = pair;
+      document.getElementById("selectedPairBadge").textContent = badge;
+      document.getElementById("dropdownPanel").classList.remove("open");
+    }
+
+    function setDuration(label, seconds, el) {
+      selectedDurationLabel = label;
+      selectedDurationSeconds = seconds;
+      document.querySelectorAll(".dur-btn").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
+    }
+
+    function startCountdown(seconds) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      let remaining = seconds;
+
+      const updateText = () => {
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        document.getElementById("resLeft").textContent =
+          `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      };
+
+      updateText();
+      countdownInterval = setInterval(() => {
+        if (remaining > 0) {
+          remaining--;
+          updateText();
+        } else {
+          clearInterval(countdownInterval);
+        }
+      }, 1000);
+    }
+
+    async function requestSignal() {
+      const res = await fetch("/api/get_signal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pair: selectedPair.pair,
+          duration: selectedDurationLabel
+        })
+      });
+      const data = await res.json();
+
+      const box = document.getElementById("signalBox");
+      box.className = "signal-box " + data.direction.toLowerCase();
+      document.getElementById("resPair").textContent = data.pair;
+      document.getElementById("resDir").textContent =
+        data.direction === "UP" ? "▲ UP" : "▼ DOWN";
+      document.getElementById("resDur").textContent = data.duration;
+      document.getElementById("resTime").textContent = data.entry_time;
+
+      startCountdown(selectedDurationSeconds);
+      loadHistory();
+    }
+
+    async function loadHistory() {
+      const res = await fetch("/api/history");
+      const data = await res.json();
+
+      document.getElementById("statTotal").textContent = data.total;
+      document.getElementById("statUp").textContent = data.up;
+      document.getElementById("statDown").textContent = data.down;
+
+      const listEl = document.getElementById("historyList");
+      if (!data.items.length) {
+        listEl.innerHTML = `<div class="history-sub" style="padding:12px 4px;">No signals recorded yet.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = data.items.map(item => `
+        <div class="history-item">
+          <div>
+            <div><strong>${item.pair}</strong></div>
+            <div class="history-sub">${item.duration} • ${item.entry_time}</div>
+          </div>
+          <div class="dir-tag ${item.direction.toLowerCase()}">
+            ${item.direction === "UP" ? "▲ UP" : "▼ DOWN"}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function clearHistory() {
+      await fetch("/api/clear_history", { method: "POST" });
+      loadHistory();
+    }
+
+    document.addEventListener("click", (e) => {
+      const wrap = document.querySelector(".pair-selector-wrap");
+      if (wrap && !wrap.contains(e.target)) {
+        document.getElementById("dropdownPanel").classList.remove("open");
+      }
+    });
+
+    loadHistory();
+  </script>
+</body>
+</html>
